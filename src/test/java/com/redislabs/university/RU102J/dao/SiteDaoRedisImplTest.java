@@ -97,7 +97,7 @@ public class SiteDaoRedisImplTest {
      * Challenge #1 Part 1. Use this test case to
      * implement the challenge in Chapter 1.
      */
-    @Ignore
+    //@Ignore
     @Test
     public void findAllWithMultipleSites() {
         SiteDaoRedisImpl dao = new SiteDaoRedisImpl(jedisPool);
@@ -106,6 +106,7 @@ public class SiteDaoRedisImplTest {
             dao.insert(site);
         }
 
+
         assertThat(dao.findAll(), is(sites));
     }
 
@@ -113,7 +114,7 @@ public class SiteDaoRedisImplTest {
      * Challenge #1 Part 2. Use this test case to
      * implement the challenge in Chapter 1.
      */
-    @Ignore
+    //@Ignore
     @Test
     public void findAllWithEmptySites() {
         SiteDaoRedisImpl dao = new SiteDaoRedisImpl(jedisPool);
@@ -132,5 +133,29 @@ public class SiteDaoRedisImplTest {
 
         assertThat(jedis.sismember(RedisSchema.getSiteIDsKey(), RedisSchema.getSiteHashKey(4L)),
                 is(true));
+    }
+
+    @Ignore
+    @Test
+    public void homeWork2() {
+        /*
+        for (int i=0; i < 10; i++) {
+            Jedis jedis = jedisPool.getResource();
+            jedis.set(String.valueOf(i), "0");
+            jedis.get(String.valueOf(i));
+        }
+        
+         */
+    }
+
+    @Ignore
+    @Test
+    public void homeWork4() {
+        try (Jedis jedis = jedisPool.getResource()) {
+            Long setSize = jedis.scard("messages");
+            System.out.println("Size: " + String.valueOf(setSize));
+            Long result = jedis.srem("messages");
+            jedis.close();
+        }
     }
 }

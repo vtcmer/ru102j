@@ -3,6 +3,8 @@ package com.redislabs.university.RU102J.dao;
 import com.redislabs.university.RU102J.api.Site;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
+import redis.clients.jedis.ScanParams;
+import redis.clients.jedis.ScanResult;
 
 import java.util.*;
 
@@ -41,8 +43,36 @@ public class SiteDaoRedisImpl implements SiteDao {
     // Challenge #1
     @Override
     public Set<Site> findAll() {
+        Set<Site> result = new HashSet<>();
         // START Challenge #1
-        return Collections.emptySet();
+        try (Jedis jedis = jedisPool.getResource()) {
+            String siteIdKey = RedisSchema.getSiteIDsKey();
+            Set<String> keys = jedis.smembers(siteIdKey);
+            for (String key: keys){
+            //ScanResult<String> keys = jedis.sscan(siteIdKey,ScanParams.SCAN_POINTER_START);
+            //for (String key: keys.getResult()){
+                /*
+                ScanResult<Map.Entry<String, String>> scanResult = jedis.hscan(key,ScanParams.SCAN_POINTER_START);
+                Map<String,String> data = new HashMap<>();
+                for (Map.Entry<String, String> entry: scanResult.getResult()){
+                    data.put(entry.getKey(), entry.getValue());
+                }
+                 */
+                Map<String,String> data =  jedis.hgetAll(key);
+                Site site = new Site(data);
+                result.add(site);
+
+            }
+
+
+
+        }
+
+        if ((result != null) && (!result.isEmpty())) {
+            return result;
+        } else {
+            return Collections.emptySet();
+        }
         // END Challenge #1
     }
 }
