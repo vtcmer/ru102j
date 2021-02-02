@@ -8,6 +8,10 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
+import redis.clients.jedis.Jedis;
+import redis.clients.jedis.Pipeline;
+import redis.clients.jedis.Response;
+import redis.clients.jedis.Transaction;
 
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
@@ -83,5 +87,66 @@ public class MetricDaoRedisZsetImplTest extends JedisDaoTestBase {
             assertThat(measurement.getValue(), is((i - 1) * 1.0));
             i -= 1;
         }
+    }
+
+
+    @Test
+    public void homework2_3() {
+        try (Jedis jedis = jedisPool.getResource()) {
+
+            jedis.set("a", "foo");
+            jedis.set("b", "bar");
+            jedis.set("c", "baz");
+            Transaction t = jedis.multi();
+
+            Response<String> r1 = t.set("b", "1");
+            Response<Long> r2 = t.incr("a");
+            Response<String> r3 = t.set("c", "100");
+
+            t.exec();
+            r1.get();
+            r2.get();
+            r3.get();
+
+        }
+    }
+
+
+    @Test
+    public void homework2_4() {
+        try (Jedis jedis = jedisPool.getResource()) {
+            Pipeline p = jedis.pipelined();
+            Response<Long> length = p.zcard("set");
+            if (length.get() < 1000) {
+                String element = "foo" + String.valueOf(Math.random());
+                p.zadd("set", Math.random(), element);
+            }
+
+            p.sync();
+
+        }
+    }
+
+    @Test
+    public void homework2_2() {
+        this.getCounts(10);
+    }
+
+    private List<Long> getCounts(Integer num) {
+        List<Long> results = new ArrayList<>(num);
+
+        try (Jedis jedis = jedisPool.getResource()) {
+            for (int i = 0; i < num; i++) {
+                System.out.println("Contador::"+i);
+                String key = String.valueOf(i);
+                if (jedis.exists(key)) {
+                    Long c = jedis.zcount(key, "-inf", "+inf");
+                    results.add(c);
+                    jedis.expire(key, 1000);
+                }
+            }
+        }
+
+        return results;
     }
 }
