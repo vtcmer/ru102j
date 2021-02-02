@@ -37,6 +37,7 @@ public class MetricsResource {
         // Get kWhGenerated measurements
         List<Measurement> generated = metricDao.getRecent(siteId, MetricUnit.WHGenerated,
                 ZonedDateTime.now(ZoneOffset.UTC), count);
+        System.out.println(">>>>>>>>/"+ZonedDateTime.now(ZoneOffset.UTC)+"/"+generated.size());
         plots.add(new Plot("Watt-Hours Generated", generated));
 
         // Get kWhUsed measurements

@@ -144,7 +144,7 @@ public class SiteDaoRedisImplTest {
             jedis.set(String.valueOf(i), "0");
             jedis.get(String.valueOf(i));
         }
-        
+
          */
     }
 

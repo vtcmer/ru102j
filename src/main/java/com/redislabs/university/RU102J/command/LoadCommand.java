@@ -35,7 +35,7 @@ public class LoadCommand extends Command {
                 .dest("host")
                 .type(String.class)
                 .required(false)
-                .setDefault("localhost")
+                .setDefault("172.17.0.2")
                 .help("The host of the Redis server to connect to");
 
         subparser.addArgument("--port")

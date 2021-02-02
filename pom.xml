@@ -17,7 +17,7 @@
     <name>redisolar</name>
 
     <properties>
-        <redis.host>localhost</redis.host>
+        <redis.host>172.17.0.2</redis.host>
         <redis.port>6379</redis.port>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>

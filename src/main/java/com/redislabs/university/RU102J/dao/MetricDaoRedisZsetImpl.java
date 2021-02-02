@@ -51,6 +51,17 @@ public class MetricDaoRedisZsetImpl implements MetricDao {
         // START Challenge #2
         String metricKey = RedisSchema.getDayMetricKey(siteId, unit, dateTime);
         Integer minuteOfDay = getMinuteOfDay(dateTime);
+
+        // Opción simple
+        //Long result = jedis.zadd(metricKey,minuteOfDay,value+":"+minuteOfDay);
+
+        // Opción solución
+        Pipeline pipeline = jedis.pipelined();
+        String dd = new MeasurementMinute(value, minuteOfDay).toString();
+        pipeline.zadd(metricKey,minuteOfDay,dd) ;
+        pipeline.expire(metricKey,METRIC_EXPIRATION_SECONDS);
+        pipeline.sync();
+
         // END Challenge #2
     }
 
@@ -161,8 +172,14 @@ public class MetricDaoRedisZsetImpl implements MetricDao {
         public static MeasurementMinute fromZSetValue(String zSetValue) {
             String[] parts = zSetValue.split(":");
             if (parts.length == 2) {
-                return new MeasurementMinute(Double.valueOf(parts[0]),
-                        Integer.valueOf(parts[1]));
+                try {
+                    return new MeasurementMinute(Double.valueOf(parts[0]),
+                            Integer.valueOf(parts[1]));
+                }catch (Throwable thw){
+                    String dd = parts[0].replace(",",".");
+                    return new MeasurementMinute(Double.valueOf(dd),
+                            Integer.valueOf(parts[1]));
+                }
             } else {
                 throw new IllegalArgumentException("Cannot convert zSetValue " +
                         zSetValue + " into MeasurementMinute");
