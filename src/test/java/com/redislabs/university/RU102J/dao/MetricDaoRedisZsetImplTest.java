@@ -89,7 +89,7 @@ public class MetricDaoRedisZsetImplTest extends JedisDaoTestBase {
         }
     }
 
-
+    @Ignore
     @Test
     public void homework2_3() {
         try (Jedis jedis = jedisPool.getResource()) {
@@ -111,7 +111,7 @@ public class MetricDaoRedisZsetImplTest extends JedisDaoTestBase {
         }
     }
 
-
+    @Ignore
     @Test
     public void homework2_4() {
         try (Jedis jedis = jedisPool.getResource()) {
@@ -126,7 +126,7 @@ public class MetricDaoRedisZsetImplTest extends JedisDaoTestBase {
 
         }
     }
-
+    @Ignore
     @Test
     public void homework2_2() {
         this.getCounts(10);
