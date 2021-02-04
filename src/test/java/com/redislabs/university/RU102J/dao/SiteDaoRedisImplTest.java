@@ -5,15 +5,12 @@ import com.redislabs.university.RU102J.TestKeyManager;
 import com.redislabs.university.RU102J.api.MeterReading;
 import com.redislabs.university.RU102J.api.Site;
 import org.junit.*;
-import redis.clients.jedis.Jedis;
-import redis.clients.jedis.JedisPool;
-import redis.clients.jedis.JedisPoolConfig;
+import redis.clients.jedis.*;
 
+import java.time.Instant;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
@@ -158,4 +155,107 @@ public class SiteDaoRedisImplTest {
             jedis.close();
         }
     }
+
+
+
+    @Test
+    public void hwFinal4() {
+      try (Jedis jedis = jedisPool.getResource()) {
+            jedis.set("foo", "bar");
+            jedis.incr("foo");
+        }
+    }
+
+    @Test
+    public void finalWeek512() {
+        for (int i=0; i<10000; i++) {
+            Jedis jedis = jedisPool.getResource();
+            jedis.incr("counter");
+            jedis.close();
+            // CODE
+        }
+    }
+
+    @Test
+    public void finalWeek521() {
+        insert(0, "A");
+        insert(1, "B");
+        insert(2, "C");
+        insert(3, "A");
+
+        try (Jedis jedis = jedisPool.getResource()) {
+            Set<String> results = jedis.zrange("metrics", 0, -1);
+            System.out.println(results);
+        }
+    }
+
+    private void insert(Integer minuteOfDay, String element) {
+        try (Jedis jedis = jedisPool.getResource()) {
+            jedis.zadd("metrics", minuteOfDay, element);
+        }
+    }
+
+
+    @Test
+    public void finalWeek528() {
+        Map<String,String> data = new HashMap<>();
+        data.put("v1","25");
+        store("aaaa",data);
+    }
+
+    public Long store(String userId ,Map<String, String> action) {
+        Long result = 0L;
+        try (Jedis jedis = jedisPool.getResource()) {
+
+            String userStream = "user-" + String.valueOf(userId);
+            Pipeline p = jedis.pipelined();
+            p.xadd("global", StreamEntryID.NEW_ENTRY, action);
+            p.xadd(userStream, StreamEntryID.NEW_ENTRY, action);
+            Response<Long> length = p.xlen(userStream);
+            p.sync();
+            result = length.get();
+        }
+
+        return result;
+    }
+
+    @Test
+    public void finalWeek534() {
+        updateTemperature(5.0);
+    }
+
+    public void updateTemperature(Double currentTemperature) {
+        try (Jedis jedis = jedisPool.getResource()) {
+            String maxTemperature = jedis.hget("metrics", "maxTemp");
+            if (currentTemperature > Double.valueOf(maxTemperature)) {
+                String newMax = String.valueOf(currentTemperature);
+                jedis.hset("metrics", "maxTemp", newMax);
+            }
+        }
+    }
+
+    @Test
+    public void finalWeek535() {
+        try {
+            hit("key",5);
+        } catch (RateLimitExceededException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void hit(String userId, Integer maxHits) throws RateLimitExceededException {
+        try (Jedis jedis = jedisPool.getResource()) {
+            String key = "limiter-" + Instant.now().getEpochSecond() +
+                    "-" + userId;
+            Pipeline p = jedis.pipelined();
+            p.lpush(key, Instant.now().toString());
+            p.expire(key, 1);
+            Response<List<String>> responses = p.lrange(key, 0, -1);
+            p.sync();
+            if (responses.get().size() > maxHits) {
+                throw new RateLimitExceededException();
+            }
+        }
+    }
+
 }
